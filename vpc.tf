@@ -1,6 +1,7 @@
 # Declaring local
 locals {
-  web_sub_ids = "${aws_subnet.webservers.*.id}"
+  web_sub_ids  = "${aws_subnet.webservers.*.id}"
+  subnet_count = "${length(local.web_sub_ids)}"
 }
 
 # Create VPC
@@ -53,19 +54,40 @@ resource "aws_route_table" "web_rt" {
 #Attach web_rt routetable to webservers subnets
 
 resource "aws_route_table_association" "web_rt" {
-  count          = "${length(local.web_sub_ids)}"
+  #count          = "${length(local.web_sub_ids)}"
+  count          = 2
   subnet_id      = "${local.web_sub_ids[count.index]}"
   route_table_id = "${aws_route_table.web_rt.id}"
 }
 
 # Create 2 Private subnets for RDS
 
-resource "aws_subnet" "rds" {
-  count      = "${length(data.aws_availability_zones.azs.names)}"
-  vpc_id     = "${aws_vpc.myapp.id}"
-  cidr_block = "${var.rds_cidrs.[count.index]}"
+#resource "aws_subnet" "rds" {
+#  count      = "${length(data.aws_availability_zones.azs.names)}"
+#  vpc_id     = "${aws_vpc.myapp.id}"
+#  cidr_block = "${var.rds_cidrs.[count.index]}"
+
+#  tags {
+#    Name = "RDS-${count.index + 1}"
+#  }
+#}
+
+resource "aws_subnet" "rds1" {
+  vpc_id            = "${aws_vpc.myapp.id}"
+  cidr_block        = "${var.rds_cidrs.[0]}"
+  availability_zone = "ap-south-1a"
 
   tags {
-    Name = "RDS-${count.index + 1}"
+    Name = "RDS-1"
+  }
+}
+
+resource "aws_subnet" "rds2" {
+  vpc_id            = "${aws_vpc.myapp.id}"
+  cidr_block        = "${var.rds_cidrs.[1]}"
+  availability_zone = "ap-south-1b"
+
+  tags {
+    Name = "RDS-2"
   }
 }
